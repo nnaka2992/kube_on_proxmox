@@ -1,2 +1,4 @@
 terraform 1.10.3
 terraform-docs 0.19.0
+pipx 1.7.1
+shellcheck 0.10.0
