@@ -16,7 +16,6 @@ mise install
 or 
 ```bash
 asdf install
-pipx install --include-deps ansible
 ```
 
 ### Installed Dev tools
@@ -42,7 +41,6 @@ wget https://cdimage.debian.org/images/cloud/bookworm/20241201-1948/debian-12-ge
 
 ```
 
-
 ## Provisioning VMs
 To provision VMs on Proxmox, follow the instructions below.
 
@@ -50,7 +48,7 @@ To provision VMs on Proxmox, follow the instructions below.
 ssh to Proxmox host and create cloud-init base VM by running follwoing commands.
 
 ``` bash
-ssh root@<proxmox_host> 'bash -s ${IMAGE_URL} ${VM_NAME} ${VM_ID}' < ./scripts/create_base_vm.sh
+ssh root@<proxmox_host> 'bash -s ${IMAGE_URL} ${VM_NAME} ${VM_ID} ${TILASCALE_AUTH_KEY}' < ./scripts/create_base_vm.sh
 ```
 
 ### Provision VMs
