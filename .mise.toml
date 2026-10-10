@@ -1,0 +1,30 @@
+[tools]
+terraform = "1.15.9"
+terraform-docs = "0.19.0"
+talosctl = "1.13.9"
+shellcheck = "0.10.0"
+
+[env]
+KUBECONFIG = "{{config_root}}/.kube/config"
+TALOSCONFIG = "{{config_root}}/terraform/talos/talosconfig"
+
+[tasks."apply:network"]
+dir = "{{config_root}}/terraform/network"
+run = "terraform apply -var-file=env/prod/variables.tfvars"
+
+[tasks."apply:vms"]
+depends = ["apply:network"]
+dir = "{{config_root}}/terraform/vms"
+run = "terraform apply -var-file=env/prod/variables.tfvars"
+
+[tasks."apply:talos"]
+depends = ["apply:vms"]
+dir = "{{config_root}}/terraform/talos"
+run = "terraform apply -var-file=env/prod/variables.tfvars"
+
+[tasks.apply]
+depends = ["apply:talos"]
+
+[tasks.docs]
+dir = "{{config_root}}"
+run = "for d in terraform/network terraform/vms terraform/talos; do terraform-docs -c .terraform-docs.yml $d; done"

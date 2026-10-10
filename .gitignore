@@ -1,2 +1,8 @@
 .terraform/
-terraform/proxmox/ssh*key
+*.plan
+.kube/
+mise.local.toml
+
+# Talos の秘密情報 (talosctl gen secrets / gen config で生成する)
+terraform/talos/secrets.yaml
+terraform/talos/talosconfig
