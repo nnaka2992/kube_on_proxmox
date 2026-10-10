@@ -1,0 +1,16 @@
+frr defaults traditional
+hostname ${hostname}
+log syslog informational
+!
+router ospf
+ ospf router-id ${router_id}
+ passive-interface default
+ no passive-interface ${underlay_bridge}
+ network ${underlay_cidr} area ${ospf_area}
+ redistribute connected route-map SDN-ONLY
+!
+ip prefix-list SDN seq 10 permit ${sdn_supernet} le ${max_prefix_len}
+!
+route-map SDN-ONLY permit 10
+ match ip address prefix-list SDN
+!

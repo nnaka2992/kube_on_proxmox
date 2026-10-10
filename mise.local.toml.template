@@ -1,0 +1,5 @@
+[env]
+PROXMOX_VE_USERNAME = "root@pam"
+PROXMOX_VE_PASSWORD = ""
+TF_VAR_ssh_password = ""
+TF_VAR_ts_authkey   = ""

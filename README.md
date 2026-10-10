@@ -1,61 +1,49 @@
 # Kube on Proxmox
-My Home Kubernetes on Proxmox IaC using terraform to create VMs on Proxmox.
 
-## Setup
-This repository uses asdf compatible dev tool manager.
+Proxmox VE 上に Talos Linux の Kubernetes クラスタを構築・運用する IaC。
 
-To install asdf or mise, follow the instructions below.
+## 構成
 
-- [mise Quickstart](https://github.com/jdx/mise?tab=readme-ov-file#quickstart)
-- [asdf Getting Started](https://asdf-vm.com/guide/getting-started.html)
+Terraform のルートモジュール 3 つを依存順に適用する。
+上流が生成した事実 (IP・MAC・サブネット) は remote state 参照で下流へ流れるため、
+環境依存の値を tfvars に転記しない。各ルートの詳細はそれぞれの README を参照。
 
-### Install Dev tools
-```bash
+| ルート | 管理対象 |
+|---|---|
+| [terraform/network](terraform/network/README.md) | SDN (zone/vnet/subnet/DHCP)、クラスタファイアウォール、PVE ホストの FRR/OSPF |
+| [terraform/vms](terraform/vms/README.md) | Talos ノード VM (bpg/proxmox) |
+| [terraform/talos](terraform/talos/README.md) | マシン設定・ブートストラップ・tailscale |
+
+秘密情報は `terraform.tfstate` に一切残らない。ファイル管理は `secrets.yaml` (Git 管理外) のみで、
+その他は `mise.local.toml` (Git 管理外) から mise が環境変数として読み込む。
+
+## セットアップ
+
+開発ツールは [mise](https://mise.jdx.dev/) で管理する。
+
+```sh
 mise install
 ```
-or 
-```bash
-asdf install
+
+新しい PVE ホストではストレージのコンテンツ種別を一度だけ設定する
+(パッケージ類は terraform/network が構成する):
+
+```sh
+pvesm set local --content images,rootdir,vztmpl,backup,iso,snippets
 ```
 
-### Installed Dev tools
-- terraform
-- terraform-docs
+## 適用
 
-## Enable Proxmox API
-To enable Proxmox API, follow the instructions below.
+認証情報は `mise.local.toml` (Git 管理外) に置くと自動で環境変数として読み込まれる:
 
-``` bash
-pveum role add TerraformProv -privs "Datastore.AllocateSpace Datastore.AllocateTemplate Datastore.Audit Pool.Allocate Sys.Audit Sys.Console Sys.Modify VM.Allocate VM.Audit VM.Clone VM.Config.CDROM VM.Config.Cloudinit VM.Config.CPU VM.Config.Disk VM.Config.HWType VM.Config.Memory VM.Config.Network VM.Config.Options VM.Migrate VM.Monitor VM.PowerMgmt SDN.Use"
-pveum user add terraform-prov@pve --password <password>
-pveum aclmod / -user terraform-prov@pve -role TerraformProv
+```sh
+cp mise.local.toml.template mise.local.toml
+vim mise.local.toml  # 各値を埋める
+
+mise run apply          # network → vms → talos の順に適用
+mise run apply:network  # 個別に適用する場合
 ```
 
-For more informations, read the following link.
-- [Docs overview | Telmate/proxmox | Terraform | Terraform Registry](https://registry.terraform.io/providers/Telmate/proxmox/latest/docs)
-
-``` bash
-apt install cloud-init
-
-wget https://cdimage.debian.org/images/cloud/bookworm/20241201-1948/debian-12-genericcloud-amd64-20241201-1948.qcow2
-
-```
-
-## Provisioning VMs
-To provision VMs on Proxmox, follow the instructions below.
-
-### Create cloud-init base VM
-ssh to Proxmox host and create cloud-init base VM by running follwoing commands.
-
-``` bash
-ssh root@<proxmox_host> 'bash -s ${IMAGE_URL} ${VM_NAME} ${VM_ID} ${TILASCALE_AUTH_KEY}' < ./scripts/create_base_vm.sh
-```
-
-### Provision VMs
-``` bash
-cd terraform/proxmox
-vim ./env/prod/variables.tfvars # Edit variables for your environment
-terraform init
-PM_USER='terraform-prov@pve' PM_PASS='<password>' terraform apply -var-files=./env/prod/variables.tfvars
-```
-
+ノードの IP が DHCP で変わった場合も同じ手順でよい (vms の refresh で新しい IP が
+talos まで伝播する)。kubeconfig / talosconfig の取得は
+[terraform/talos/README.md](terraform/talos/README.md) を参照。
