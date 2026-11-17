@@ -4,7 +4,7 @@ Talos ノード VM を管理するルートモジュール。
 
 ## 構成
 
-- `proxmox_virtual_environment_vm`: Talos ノード 8 台 (ISO ブート、ディスク 100G、NIC 2 枚)
+- `proxmox_virtual_environment_vm`: Talos ノード 8 台 (ISO ブート、NIC 2 枚。CPU・メモリ・ディスクは VM ごとに宣言)
 - ロールとタグは VM 名から、kubenet 側ブリッジは配置ノードから導出
   (`terraform/network` の `node_vnets` を remote state で参照)
 - **MAC アドレスは宣言しない**: Proxmox が生成した値を import で取り込み、outputs
@@ -34,8 +34,14 @@ terraform plan -var-file=env/prod/variables.tfvars
 
 ## 注意
 
-- `cores` / `memory` の変更は hotplug 可能な範囲なら稼働中に反映される。それ以外
-  (ディスク縮小など) は破壊的操作なので plan をよく確認すること。
+- `memory` の変更とディスクの resize は稼働中の VM には適用されない
+  (`reboot_after_update = false` のため terraform が再起動することもない)。
+  ゲスト内からの再起動でも反映されず、VM の停止 → 起動が必要。1 台ずつ
+  `talosctl -n <ip> shutdown` → 電源断を確認 →
+  `terraform apply -target='proxmox_virtual_environment_vm.main["<name>"]'`
+  で起動すると、停止中に resize が適用され `started` の乖離検出で起動する。
+  control-plane は etcd の health を確認しながら直列で行う。
+- ディスクサイズは縮小不可。
 - VM を作り直すと MAC と IP が変わる。`terraform/vms` → `terraform/talos` の順に
   apply すれば新しい値が自動で伝播する。
 
@@ -73,9 +79,8 @@ No modules.
 |------|-------------|------|---------|:--------:|
 | proxmox\_uri | Proxmox VE API のエンドポイント (例: https://192.168.2.253:8006) | `string` | n/a | yes |
 | talos\_iso | Talos の ISO イメージ (例: local:iso/talos-1.13.9-amd64.iso) | `string` | n/a | yes |
-| vms | Talos ノード VM の定義。キーが VM 名 (= Talos のホスト名)。ロールは名前から、kubenet 側ブリッジは配置ノードから導出する。 | <pre>map(object({<br/>    node   = string # 配置する PVE ノード<br/>    vm_id  = number<br/>    cores  = number<br/>    memory = number # MiB<br/>  }))</pre> | n/a | yes |
+| vms | Talos ノード VM の定義。キーが VM 名 (= Talos のホスト名)。ロールは名前から、kubenet 側ブリッジは配置ノードから導出する。 | <pre>map(object({<br/>    node   = string # 配置する PVE ノード<br/>    vm_id  = number<br/>    cores  = number<br/>    memory = number # MiB<br/>    disk   = number # GB。縮小は不可<br/>  }))</pre> | n/a | yes |
 | disk\_datastore | VM ディスクのデータストア | `string` | `"local-lvm"` | no |
-| disk\_size | VM ディスクのサイズ (GB) | `number` | `100` | no |
 
 ## Outputs
 
