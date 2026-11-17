@@ -60,9 +60,11 @@ resource "proxmox_virtual_environment_vm" "main" {
   disk {
     interface    = "scsi0"
     datastore_id = var.disk_datastore
-    size         = var.disk_size
+    size         = each.value.disk
     file_format  = "raw"
     replicate    = false
+    discard      = "on"
+    backup       = false
   }
 
   # ディスクが空の初回起動時は ide2 (Talos ISO) へフォールバックする

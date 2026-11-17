@@ -14,12 +14,6 @@ variable "disk_datastore" {
   default     = "local-lvm"
 }
 
-variable "disk_size" {
-  description = "VM ディスクのサイズ (GB)"
-  type        = number
-  default     = 100
-}
-
 variable "vms" {
   description = "Talos ノード VM の定義。キーが VM 名 (= Talos のホスト名)。ロールは名前から、kubenet 側ブリッジは配置ノードから導出する。"
   type = map(object({
@@ -27,6 +21,7 @@ variable "vms" {
     vm_id  = number
     cores  = number
     memory = number # MiB
+    disk   = number # GB。縮小は不可
   }))
 
   validation {
