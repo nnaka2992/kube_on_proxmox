@@ -107,6 +107,23 @@ locals {
       }
     }
   })
+
+  # ワーカーのみ: kubelet はコンテナ内で動くため、local-path-provisioner の
+  # ホストパスを伝搬させないと subPath 解決時に空ディレクトリを作ってしまう
+  worker_patch = yamlencode({
+    machine = {
+      kubelet = {
+        extraMounts = [
+          {
+            destination = "/var/local-path-provisioner"
+            type        = "bind"
+            source      = "/var/local-path-provisioner"
+            options     = ["bind", "rshared", "rw"]
+          }
+        ]
+      }
+    }
+  })
 }
 
 # ノードごとのマシン設定の生成 (旧 talosctl gen config + 各パッチ)。
@@ -175,7 +192,7 @@ ephemeral "talos_machine_configuration" "main" {
         ]
       }),
     ],
-    local.node_machine_types[each.key] == "controlplane" ? [local.controlplane_patch] : [],
+    local.node_machine_types[each.key] == "controlplane" ? [local.controlplane_patch] : [local.worker_patch],
   )
 }
 
