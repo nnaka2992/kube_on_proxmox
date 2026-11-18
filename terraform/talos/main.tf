@@ -158,7 +158,7 @@ ephemeral "talos_machine_configuration" "main" {
         machine = {
           install = {
             disk  = var.install_disk
-            image = var.install_image
+            image = var.install_image[local.node_machine_types[each.key]]
             wipe  = false
           }
           network = {
