@@ -104,7 +104,7 @@ No modules.
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
 | cluster\_name | Talos クラスタ名 | `string` | n/a | yes |
-| install\_image | インストールに使うイメージ。システム拡張 (qemu-guest-agent, tailscale) を含む factory イメージを指定すること。 | `string` | n/a | yes |
+| install\_image | ロール別のインストールイメージ。qemu-guest-agent と tailscale を含む factory イメージを指定すること。worker は kata-containers も含む。 | <pre>object({<br/>    controlplane = string<br/>    worker       = string<br/>  })</pre> | n/a | yes |
 | kubernetes\_version | Kubernetes バージョン (例: 1.36.3) | `string` | n/a | yes |
 | talos\_version | マシン設定の生成に使う Talos バージョン (例: v1.13.9) | `string` | n/a | yes |
 | ts\_authkey | tailscale の認証キー。環境変数 TF\_VAR\_ts\_authkey 経由で設定する | `string` | n/a | yes |

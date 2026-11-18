@@ -20,8 +20,11 @@ variable "install_disk" {
 }
 
 variable "install_image" {
-  description = "インストールに使うイメージ。システム拡張 (qemu-guest-agent, tailscale) を含む factory イメージを指定すること。"
-  type        = string
+  description = "ロール別のインストールイメージ。qemu-guest-agent と tailscale を含む factory イメージを指定すること。worker は kata-containers も含む。"
+  type = object({
+    controlplane = string
+    worker       = string
+  })
 }
 
 variable "ts_authkey" {
