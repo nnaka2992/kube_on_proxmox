@@ -88,10 +88,20 @@ locals {
 
 # 共通パッチ
 locals {
+  # Agent Substrate の podCertificate / clusterTrustBundle projected volume に必要。v1.36 では既定で無効
+  feature_gates = join(",", [
+    "ClusterTrustBundle=true",
+    "ClusterTrustBundleProjection=true",
+    "PodCertificateRequest=true",
+  ])
+
   # 全ノード共通: kubelet が InternalIP として kubenet 側のアドレスを選ぶようにする
   common_patch = yamlencode({
     machine = {
       kubelet = {
+        extraArgs = {
+          feature-gates = local.feature_gates
+        }
         nodeIP = {
           validSubnets = local.kubelet_subnets
         }
@@ -102,6 +112,22 @@ locals {
   # コントロールプレーンのみ: etcd のピア通信を kubenet 側に限定する
   controlplane_patch = yamlencode({
     cluster = {
+      apiServer = {
+        extraArgs = {
+          feature-gates  = local.feature_gates
+          runtime-config = "certificates.k8s.io/v1beta1=true"
+        }
+      }
+      controllerManager = {
+        extraArgs = {
+          feature-gates = local.feature_gates
+        }
+      }
+      scheduler = {
+        extraArgs = {
+          feature-gates = local.feature_gates
+        }
+      }
       etcd = {
         advertisedSubnets = local.kubelet_subnets
       }
