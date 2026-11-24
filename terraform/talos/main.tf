@@ -138,6 +138,9 @@ locals {
   # ホストパスを伝搬させないと subPath 解決時に空ディレクトリを作ってしまう
   worker_patch = yamlencode({
     machine = {
+      sysctls = {
+        "user.max_user_namespaces" = "11255"
+      }
       kubelet = {
         extraMounts = [
           {
