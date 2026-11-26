@@ -88,7 +88,7 @@ locals {
   # ServiceAccount トークンの issuer。エンドポイントの IP は変わりうるため名前を使う
   sa_issuer = "https://kube.nnaka2992.dev"
   # kube-apiserver は先頭の issuer で発行し、すべてを受け付ける
-  sa_issuers = [local.cluster_endpoint, local.sa_issuer]
+  sa_issuers = [local.sa_issuer, local.cluster_endpoint]
 }
 
 # 共通パッチ
