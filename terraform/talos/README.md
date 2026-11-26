@@ -77,13 +77,13 @@ talosctl --talosconfig talosconfig kubeconfig --nodes 192.168.2.113
 | Name | Version |
 |------|---------|
 | terraform | >=1.11 |
-| talos | = 0.11.0 |
+| talos | = 0.12.0 |
 
 ## Providers
 
 | Name | Version |
 |------|---------|
-| talos | = 0.11.0 |
+| talos | = 0.12.0 |
 | terraform | n/a |
 
 ## Modules
@@ -94,8 +94,8 @@ No modules.
 
 | Name | Type |
 |------|------|
-| [talos_machine_bootstrap.main](https://registry.terraform.io/providers/siderolabs/talos/0.11.0/docs/resources/machine_bootstrap) | resource |
-| [talos_machine_configuration_apply.main](https://registry.terraform.io/providers/siderolabs/talos/0.11.0/docs/resources/machine_configuration_apply) | resource |
+| [talos_machine_bootstrap.main](https://registry.terraform.io/providers/siderolabs/talos/0.12.0/docs/resources/machine_bootstrap) | resource |
+| [talos_machine_configuration_apply.main](https://registry.terraform.io/providers/siderolabs/talos/0.12.0/docs/resources/machine_configuration_apply) | resource |
 | [terraform_remote_state.network](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/data-sources/remote_state) | data source |
 | [terraform_remote_state.vms](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/data-sources/remote_state) | data source |
 

@@ -84,6 +84,11 @@ locals {
 
   # Kubernetes API のエンドポイント。先頭のコントロールプレーンの IP を参照する。
   cluster_endpoint = "https://${local.bootstrap_ip}:6443"
+
+  # ServiceAccount トークンの issuer。エンドポイントの IP は変わりうるため名前を使う
+  sa_issuer = "https://kube.nnaka2992.dev"
+  # kube-apiserver は先頭の issuer で発行し、すべてを受け付ける
+  sa_issuers = [local.cluster_endpoint, local.sa_issuer]
 }
 
 # 共通パッチ
@@ -113,9 +118,15 @@ locals {
   controlplane_patch = yamlencode({
     cluster = {
       apiServer = {
+        # issuer の名前でも API サーバに届くようにする
+        certSANs = ["kube.nnaka2992.dev"]
         extraArgs = {
           feature-gates  = local.feature_gates
           runtime-config = "certificates.k8s.io/v1beta1=true"
+          # リストは同じフラグの繰り返しになり、Talos の既定値を置き換える
+          service-account-issuer = local.sa_issuers
+          # issuer を変えても既存トークンの audience を保つ
+          api-audiences = local.cluster_endpoint
         }
       }
       controllerManager = {
