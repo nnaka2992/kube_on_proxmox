@@ -93,7 +93,7 @@ locals {
 
 # 共通パッチ
 locals {
-  # Agent Substrate の podCertificate / clusterTrustBundle projected volume に必要。v1.36 では既定で無効
+  # podCertificate / clusterTrustBundle の projected volume に必要。v1.36 では既定で無効
   feature_gates = join(",", [
     "ClusterTrustBundle=true",
     "ClusterTrustBundleProjection=true",
