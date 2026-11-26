@@ -85,14 +85,9 @@ locals {
   # Kubernetes API のエンドポイント。先頭のコントロールプレーンの IP を参照する。
   cluster_endpoint = "https://${local.bootstrap_ip}:6443"
 
-  # ServiceAccount トークンの issuer。Talos の既定はエンドポイント (IP なので
-  # 変わりうる) のため、自分のドメインの名前に移す。外の DNS には登録しない:
-  # 鍵を取りに来るのはクラスタ内の Substrate だけで、mykube の hostAliases で
-  # kubernetes Service に向けている。Google の Workload Identity Federation は
-  # 公開鍵をアップロードして使う。
+  # ServiceAccount トークンの issuer。エンドポイントの IP は変わりうるため名前を使う
   sa_issuer = "https://kube.nnaka2992.dev"
-  # kube-apiserver は先頭の issuer でトークンを発行し、すべてを受け付ける。
-  # 移行の 1 段目: 発行は今のまま、新しい issuer も受け付ける。
+  # kube-apiserver は先頭の issuer で発行し、すべてを受け付ける
   sa_issuers = [local.cluster_endpoint, local.sa_issuer]
 }
 
@@ -123,14 +118,14 @@ locals {
   controlplane_patch = yamlencode({
     cluster = {
       apiServer = {
-        # issuer の名前で API サーバに届くように (Substrate の OIDC discovery)
+        # issuer の名前でも API サーバに届くようにする
         certSANs = ["kube.nnaka2992.dev"]
         extraArgs = {
           feature-gates  = local.feature_gates
           runtime-config = "certificates.k8s.io/v1beta1=true"
-          # 値を並べると同じフラグが順に繰り返される (Talos 1.13)。既定値は置き換わる。
+          # リストは同じフラグの繰り返しになり、Talos の既定値を置き換える
           service-account-issuer = local.sa_issuers
-          # 既定はエンドポイント。issuer を変えても既存トークンの宛先は同じに保つ
+          # issuer を変えても既存トークンの audience を保つ
           api-audiences = local.cluster_endpoint
         }
       }
