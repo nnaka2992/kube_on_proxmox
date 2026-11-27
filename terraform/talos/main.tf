@@ -102,6 +102,14 @@ locals {
 
   # 全ノード共通: kubelet が InternalIP として kubenet 側のアドレスを選ぶようにする
   common_patch = yamlencode({
+    cluster = {
+      # CNI は Talos では入れず、クラスタに後から入れる
+      network = {
+        cni = {
+          name = "none"
+        }
+      }
+    }
     machine = {
       kubelet = {
         extraArgs = {
